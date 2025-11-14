@@ -1,0 +1,82 @@
+{% extends 'resumos/base.html' %}
+
+{% block title %}Perfil de {{ usuario.username }} - Banco de Resumos Marista{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" 
+                         style="width: 100px; height: 100px; font-size: 48px;">
+                        {{ usuario.username|slice:":1"|upper }}
+                    </div>
+                </div>
+                <h2 class="mb-2">{{ usuario.username }}</h2>
+                <p class="text-muted">
+                    <i class="bi bi-calendar"></i> Membro desde {{ usuario.date_joined|date:"F Y" }}
+                </p>
+                <div class="mt-3">
+                    <span class="badge bg-primary me-2">📚 {{ resumos.count }} resumo{{ resumos.count|pluralize }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h3 class="mb-4">📖 Resumos de {{ usuario.username }}</h3>
+    </div>
+</div>
+
+<div class="row">
+    {% if resumos %}
+        {% for resumo in resumos %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm hover-card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ resumo.titulo }}</h5>
+                    <p class="card-text">
+                        <span class="badge bg-primary">{{ resumo.disciplina.nome }}</span>
+                        <span class="badge bg-secondary">{{ resumo.ano.numero }}º Ano</span>
+                    </p>
+                    {% if resumo.tags.exists %}
+                    <p class="card-text">
+                        {% for tag in resumo.tags.all %}
+                        <span class="badge" style="background-color: {{ tag.cor }};">{{ tag.nome }}</span>
+                        {% endfor %}
+                    </p>
+                    {% endif %}
+                    <p class="card-text text-muted">
+                        <small>📅 {{ resumo.data_criacao|date:"d/m/Y" }}</small>
+                    </p>
+                    <p class="card-text">{{ resumo.conteudo|truncatewords:20 }}</p>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{% url 'resumos:detalhe' resumo.pk %}" class="btn btn-sm btn-outline-primary">
+                        Ver Detalhes →
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info text-center" role="alert">
+                <h4 class="alert-heading">📚 Nenhum resumo encontrado</h4>
+                <p>{{ usuario.username }} ainda não criou nenhum resumo.</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <a href="{% url 'resumos:lista' %}" class="btn btn-secondary">
+            ← Voltar à Lista
+        </a>
+    </div>
+</div>
+{% endblock %}

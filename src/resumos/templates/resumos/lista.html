@@ -1,0 +1,152 @@
+{% extends 'resumos/base.html' %}
+
+{% block title %}Lista de Resumos - Banco de Resumos Marista{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">📖 Resumos Disponíveis</h1>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm" style="border-radius: 12px; overflow: hidden;">
+            <div class="card-body">
+                <h5 class="card-title mb-3" style="color: #0284c7;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-funnel me-2" viewBox="0 0 16 16">
+                        <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2zm1 .5v1.308l4.372 4.858A.5.5 0 0 1 7 8.5v5.306l2-.666V8.5a.5.5 0 0 1 .128-.334L13.5 3.308V2h-11z"/>
+                    </svg>
+                    Filtrar Resumos
+                </h5>
+                <form method="get" class="row g-3" id="filterForm">
+                    <div class="col-md-5">
+                        <label for="ano" class="form-label fw-semibold">Ano</label>
+                        <select name="ano" id="ano" class="form-select">
+                            <option value="">Todos os anos</option>
+                            {% for ano in anos %}
+                            <option value="{{ ano.id }}" {% if request.GET.ano == ano.id|stringformat:"s" %}selected{% endif %}>
+                                {{ ano.numero }}º Ano
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label for="disciplina" class="form-label fw-semibold">Disciplina</label>
+                        <select name="disciplina" id="disciplina" class="form-select">
+                            <option value="">Todas as disciplinas</option>
+                            {% for disciplina in disciplinas %}
+                            <option value="{{ disciplina.id }}" {% if request.GET.disciplina == disciplina.id|stringformat:"s" %}selected{% endif %}>
+                                {{ disciplina.nome }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn w-100" style="background-color: #0ea5e9; color: white;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search me-1" viewBox="0 0 16 16">
+                                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                            </svg>
+                            Filtrar
+                        </button>
+                    </div>
+                    {% if request.GET.search %}
+                        <input type="hidden" name="search" value="{{ request.GET.search }}">
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Resumos -->
+<div class="row">
+    {% if resumos %}
+        {% for resumo in resumos %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm hover-card" style="border-radius: 12px; overflow: hidden;">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold" style="color: #0c4a6e;">{{ resumo.titulo }}</h5>
+                    <p class="card-text mb-3">
+                        <span class="badge" style="background-color: #0ea5e9;">{{ resumo.disciplina.nome }}</span>
+                        <span class="badge" style="background-color: #0284c7;">{{ resumo.ano.numero }}º Ano</span>
+                    </p>
+                    <p class="card-text text-muted">
+                        <small>📝 Por {{ resumo.autor.username }} • 📅 {{ resumo.data_criacao|date:"d/m/Y" }}</small>
+                    </p>
+                    <p class="card-text">{{ resumo.conteudo|truncatewords:20 }}</p>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'resumos:detalhe' resumo.pk %}" class="btn btn-sm w-100" style="background-color: #0ea5e9; color: white;">
+                        Ver Detalhes →
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info text-center" role="alert">
+                <h4 class="alert-heading">📚 Nenhum resumo encontrado</h4>
+                <p>Ainda não há resumos disponíveis com os filtros selecionados.</p>
+                {% if user.is_authenticated %}
+                <a href="{% url 'resumos:criar' %}" class="btn mt-3" style="background-color: #0ea5e9; color: white;">➕ Adicionar Primeiro Resumo</a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const anoSelect = document.getElementById('ano');
+    const disciplinaSelect = document.getElementById('disciplina');
+    const selectedDisciplina = disciplinaSelect.value;
+    
+    // Store all original disciplines
+    const allDisciplinas = Array.from(disciplinaSelect.options).slice(1).map(opt => ({
+        id: opt.value,
+        nome: opt.text
+    }));
+    
+    anoSelect.addEventListener('change', function() {
+        const anoId = this.value;
+        
+        if (!anoId) {
+            // Show all disciplines
+            updateDisciplinaSelect(allDisciplinas, selectedDisciplina);
+            return;
+        }
+        
+        // Fetch disciplines for selected year
+        fetch(`{% url 'resumos:disciplinas_por_ano' %}?ano_id=${anoId}`)
+            .then(response => response.json())
+            .then(data => {
+                updateDisciplinaSelect(data.disciplinas, selectedDisciplina);
+            })
+            .catch(error => {
+                console.error('Error fetching disciplines:', error);
+            });
+    });
+    
+    function updateDisciplinaSelect(disciplinas, keepSelected) {
+        // Clear existing options except the first one
+        disciplinaSelect.innerHTML = '<option value="">Todas as disciplinas</option>';
+        
+        // Add filtered disciplines
+        disciplinas.forEach(disc => {
+            const option = document.createElement('option');
+            option.value = disc.id;
+            option.textContent = disc.nome;
+            if (keepSelected && disc.id == keepSelected) {
+                option.selected = true;
+            }
+            disciplinaSelect.appendChild(option);
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends 'resumos/base.html' %}
+
+{% block title %}Registar - Banco de Resumos Marista{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-6 mx-auto">
+        <div class="card shadow">
+            <div class="card-header text-white text-center" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <h2 class="mb-0">📝 Criar Conta</h2>
+            </div>
+            <div class="card-body">
+                <p class="text-center text-muted mb-4">
+                    Crie sua conta para começar a partilhar resumos
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Nome de Utilizador *</label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="username" 
+                            name="username" 
+                            required
+                            autofocus
+                            minlength="3"
+                            maxlength="150"
+                            pattern="[a-zA-Z0-9_]+"
+                            title="Apenas letras, números e underscore">
+                        <div class="form-text">Apenas letras, números e underscore (_)</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email *</label>
+                        <input 
+                            type="email" 
+                            class="form-control" 
+                            id="email" 
+                            name="email" 
+                            required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">Nome</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="first_name" 
+                                name="first_name"
+                                maxlength="150">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Apelido</label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="last_name" 
+                                name="last_name"
+                                maxlength="150">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Senha *</label>
+                        <input 
+                            type="password" 
+                            class="form-control" 
+                            id="password" 
+                            name="password" 
+                            required
+                            minlength="6">
+                        <div class="form-text">Mínimo de 6 caracteres</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password_confirm" class="form-label">Confirmar Senha *</label>
+                        <input 
+                            type="password" 
+                            class="form-control" 
+                            id="password_confirm" 
+                            name="password_confirm" 
+                            required
+                            minlength="6">
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            🚀 Criar Conta
+                        </button>
+                        <a href="{% url 'login' %}" class="btn" style="background-color: #0ea5e9; color: white;">
+                            Já tem conta? Entrar
+                        </a>
+                        <a href="{% url 'resumos:lista' %}" class="btn btn-secondary">
+                            Voltar para Lista de Resumos
+                        </a>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center text-muted">
+                <small>* Campos obrigatórios</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Validação de senha em tempo real
+    document.addEventListener('DOMContentLoaded', function() {
+        const password = document.getElementById('password');
+        const passwordConfirm = document.getElementById('password_confirm');
+        
+        passwordConfirm.addEventListener('input', function() {
+            if (password.value !== passwordConfirm.value) {
+                passwordConfirm.setCustomValidity('As senhas não coincidem');
+            } else {
+                passwordConfirm.setCustomValidity('');
+            }
+        });
+        
+        password.addEventListener('input', function() {
+            if (password.value !== passwordConfirm.value && passwordConfirm.value !== '') {
+                passwordConfirm.setCustomValidity('As senhas não coincidem');
+            } else {
+                passwordConfirm.setCustomValidity('');
+            }
+        });
+    });
+</script>
+{% endblock %}

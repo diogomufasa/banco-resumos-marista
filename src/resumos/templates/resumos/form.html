@@ -1,0 +1,192 @@
+{% extends 'resumos/base.html' %}
+
+{% block title %}
+    {% if resumo %}Editar Resumo{% else %}Criar Resumo{% endif %} - Banco de Resumos Marista
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">
+                    {% if resumo %}
+                        ✏️ Editar Resumo
+                    {% else %}
+                        ✍️ Criar Novo Resumo
+                    {% endif %}
+                </h2>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Título -->
+                    <div class="mb-3">
+                        <label for="titulo" class="form-label">Título <span class="text-danger">*</span></label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="titulo" 
+                            name="titulo" 
+                            value="{% if resumo %}{{ resumo.titulo }}{% endif %}"
+                            required
+                            placeholder="Ex: Resumo de Matemática - Equações do 2º Grau">
+                    </div>
+
+                    <!-- Disciplina e Ano -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="ano" class="form-label">Ano <span class="text-danger">*</span></label>
+                            <select class="form-select" id="ano" name="ano" required>
+                                <option value="">Selecione o ano</option>
+                                {% for ano in anos %}
+                                <option value="{{ ano.id }}"
+                                    {% if resumo and resumo.ano.id == ano.id %}selected{% endif %}>
+                                    {{ ano.numero }}º Ano
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="disciplina" class="form-label">Disciplina <span class="text-danger">*</span></label>
+                            <select class="form-select" id="disciplina" name="disciplina" required>
+                                <option value="">Selecione uma disciplina</option>
+                                {% for disciplina in disciplinas %}
+                                <option value="{{ disciplina.id }}" 
+                                    {% if resumo and resumo.disciplina.id == disciplina.id %}selected{% endif %}>
+                                    {{ disciplina.nome }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-text text-muted" id="disciplinaHelp" style="display: none;">
+                                Selecione um ano primeiro para ver as disciplinas disponíveis.
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Conteúdo -->
+                    <div class="mb-3">
+                        <label for="conteudo" class="form-label">Conteúdo do Resumo <span class="text-danger">*</span></label>
+                        <textarea 
+                            class="form-control" 
+                            id="conteudo" 
+                            name="conteudo" 
+                            rows="12" 
+                            required
+                            placeholder="Escreva aqui o conteúdo do seu resumo...">{% if resumo %}{{ resumo.conteudo }}{% endif %}</textarea>
+                        <small class="form-text text-muted">
+                            Dica: Seja claro e organize o conteúdo com tópicos para facilitar a leitura.
+                        </small>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="mb-3">
+                        <label class="form-label">Tags (opcional)</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for tag in tags %}
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    name="tags" 
+                                    value="{{ tag.id }}"
+                                    id="tag{{ tag.id }}"
+                                    {% if resumo and tag in resumo.tags.all %}checked{% endif %}>
+                                <label class="form-check-label" for="tag{{ tag.id }}">
+                                    <span class="badge" style="background-color: {{ tag.cor }};">{{ tag.nome }}</span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <small class="form-text text-muted">
+                            Selecione as tags que melhor descrevem seu resumo.
+                        </small>
+                    </div>
+
+                    <!-- Arquivo Anexo -->
+                    <div class="mb-3">
+                        <label for="arquivo" class="form-label">Arquivo Anexo (opcional)</label>
+                        {% if resumo and resumo.arquivo %}
+                        <div class="alert alert-info mb-2">
+                            📎 Arquivo atual: <a href="{{ resumo.arquivo.url }}" target="_blank">{{ resumo.arquivo.name }}</a>
+                        </div>
+                        {% endif %}
+                        <input type="file" class="form-control" id="arquivo" name="arquivo">
+                        <small class="form-text text-muted">
+                            Formatos aceitos: PDF, DOC, DOCX, TXT, imagens (máx. 10MB)
+                        </small>
+                    </div>
+
+                    <!-- Botões -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            💾 {% if resumo %}Atualizar Resumo{% else %}Guardar Resumo{% endif %}
+                        </button>
+                        <a href="{% if resumo %}{% url 'resumos:detalhe' resumo.pk %}{% else %}{% url 'resumos:lista' %}{% endif %}" 
+                           class="btn btn-secondary">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const anoSelect = document.getElementById('ano');
+    const disciplinaSelect = document.getElementById('disciplina');
+    const disciplinaHelp = document.getElementById('disciplinaHelp');
+    const selectedDisciplina = disciplinaSelect.value;
+    
+    // Store all original disciplines
+    const allDisciplinas = Array.from(disciplinaSelect.options).slice(1).map(opt => ({
+        id: opt.value,
+        nome: opt.text
+    }));
+    
+    anoSelect.addEventListener('change', function() {
+        const anoId = this.value;
+        
+        if (!anoId) {
+            // Show all disciplines and help text
+            updateDisciplinaSelect(allDisciplinas, selectedDisciplina);
+            disciplinaHelp.style.display = 'block';
+            return;
+        }
+        
+        disciplinaHelp.style.display = 'none';
+        
+        // Fetch disciplines for selected year
+        fetch(`{% url 'resumos:disciplinas_por_ano' %}?ano_id=${anoId}`)
+            .then(response => response.json())
+            .then(data => {
+                updateDisciplinaSelect(data.disciplinas, selectedDisciplina);
+            })
+            .catch(error => {
+                console.error('Error fetching disciplines:', error);
+            });
+    });
+    
+    function updateDisciplinaSelect(disciplinas, keepSelected) {
+        // Clear existing options except the first one
+        disciplinaSelect.innerHTML = '<option value="">Selecione uma disciplina</option>';
+        
+        // Add filtered disciplines
+        disciplinas.forEach(disc => {
+            const option = document.createElement('option');
+            option.value = disc.id;
+            option.textContent = disc.nome;
+            if (keepSelected && disc.id == keepSelected) {
+                option.selected = true;
+            }
+            disciplinaSelect.appendChild(option);
+        });
+    }
+});
+</script>
+{% endblock %}

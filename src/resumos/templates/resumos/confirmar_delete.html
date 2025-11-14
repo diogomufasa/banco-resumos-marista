@@ -1,0 +1,45 @@
+{% extends 'resumos/base.html' %}
+
+{% block title %}Confirmar Exclusão - Banco de Resumos Marista{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-6 mx-auto">
+        <div class="card shadow border-danger">
+            <div class="card-header bg-danger text-white">
+                <h2 class="mb-0">⚠️ Confirmar Exclusão</h2>
+            </div>
+            <div class="card-body">
+                <p class="lead">Tem certeza que deseja excluir o seguinte resumo?</p>
+                
+                <div class="alert alert-light border">
+                    <h5>{{ resumo.titulo }}</h5>
+                    <p class="mb-1">
+                        <span class="badge bg-primary">{{ resumo.disciplina.nome }}</span>
+                        <span class="badge bg-secondary">{{ resumo.ano.numero }}º Ano</span>
+                    </p>
+                    <p class="text-muted mb-0">
+                        <small>Por {{ resumo.autor.username }} • {{ resumo.data_criacao|date:"d/m/Y" }}</small>
+                    </p>
+                </div>
+
+                <div class="alert alert-danger">
+                    <strong>⚠️ Atenção:</strong> Esta ação não pode ser desfeita! Todos os dados deste resumo serão permanentemente removidos.
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            🗑️ Sim, Excluir Resumo
+                        </button>
+                        <a href="{% url 'resumos:detalhe' resumo.pk %}" class="btn btn-secondary">
+                            ← Cancelar e Voltar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
