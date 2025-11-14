@@ -51,7 +51,8 @@ main {
 }
 
 .navbar-brand .navbar-logo {
-    height: 38px;
+    height: 36px; /* reduced size for a balanced navbar */
+    max-height: 40px;
     width: auto;
     display: inline-block;
     border-radius: 6px;
@@ -59,7 +60,8 @@ main {
 
 @media (max-width: 576px) {
     .navbar-brand .navbar-logo {
-        height: 30px;
+        height: 28px;
+        max-height: 32px;
     }
 }
 
