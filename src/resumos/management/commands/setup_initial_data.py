@@ -21,10 +21,10 @@ class Command(BaseCommand):
             'Inglês',
             'Filosofia',
             'Educação Física',
-            'Artes',
+            'Desenho',
             'Geometria Descritiva A',
             'Matemática A',
-            'Econemia A',
+            'Economia A',
             'EMRC',
             'MACS',
             'História B',
@@ -53,7 +53,7 @@ class Command(BaseCommand):
                 self.stdout.write(f'- Disciplina já existe: {nome}')
 
         # Criar anos 
-        for numero in range(7, 13):
+        for numero in range(5, 13):
             ano, created = Ano.objects.get_or_create(numero=numero)
             if created:
                 self.stdout.write(self.style.SUCCESS(f'✓ Ano criado: {numero}º Ano'))
@@ -61,5 +61,5 @@ class Command(BaseCommand):
                 self.stdout.write(f'- Ano já existe: {numero}º Ano')
 
         self.stdout.write(self.style.SUCCESS('\n  Dados iniciais criados com sucesso!'))
-        self.stdout.write(self.style.WARNING('\n  Não esqueça de criar um superusuário:'))
+        self.stdout.write(self.style.WARNING('\n  Não esqueça de criar um admin:'))
         self.stdout.write('   python manage.py createsuperuser')

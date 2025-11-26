@@ -6,6 +6,9 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
 from .models import Resumo, Disciplina, Ano, Tag
+import os
+import groq
+from .services.groq_guard import verify_file_with_groq
 
 def signup(request):
     """
@@ -117,6 +120,26 @@ def criar_resumo(request):
         ano_id = request.POST.get('ano')
         arquivo = request.FILES.get('arquivo')
         tag_ids = request.POST.getlist('tags')
+
+        context = {
+            'disciplinas': disciplinas,
+            'anos': anos,
+            'tags': tags,
+            'form_data': request.POST,
+            'form_selected_ano': ano_id,
+            'form_selected_disciplina': disciplina_id,
+            'selected_tags': tag_ids,
+        }
+
+        if not all([titulo, conteudo, disciplina_id, ano_id]):
+            messages.error(request, 'Preencha todos os campos obrigatórios.')
+            return render(request, 'resumos/form.html', context)
+
+        if arquivo:
+            is_safe, error_message = verify_file_with_groq(arquivo)
+            if not is_safe:
+                messages.error(request, error_message)
+                return render(request, 'resumos/form.html', context)
         
         resumo = Resumo.objects.create(
             titulo=titulo,
@@ -159,7 +182,17 @@ def editar_resumo(request, pk):
         tag_ids = request.POST.getlist('tags')
         
         if request.FILES.get('arquivo'):
-            resumo.arquivo = request.FILES.get('arquivo')
+            arquivo = request.FILES.get('arquivo')
+            is_safe, error_message = verify_file_with_groq(arquivo)
+            if not is_safe:
+                messages.error(request, error_message)
+                return render(request, 'resumos/form.html', {
+                    'resumo': resumo,
+                    'disciplinas': disciplinas,
+                    'anos': anos,
+                    'tags': tags,
+                })
+            resumo.arquivo = arquivo
         
         resumo.save()
         

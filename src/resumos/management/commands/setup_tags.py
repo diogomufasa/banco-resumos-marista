@@ -15,7 +15,7 @@ class Command(BaseCommand):
 
         ]
         
-        self.stdout.write(self.style.SUCCESS('Configurando tags padrão...'))
+        self.stdout.write(self.style.SUCCESS('A configurar tags padrão...'))
         
         for tag_data in tags_padrão:
             tag, created = Tag.objects.get_or_create(

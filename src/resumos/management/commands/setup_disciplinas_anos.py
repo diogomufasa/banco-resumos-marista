@@ -22,10 +22,10 @@ class Command(BaseCommand):
             'Química': [12],
             'Inglês': [5, 6, 7, 8, 9, 10, 11, 12],
             'Educação Física': [5, 6, 7, 8, 9, 10, 11, 12],
-            'Artes': [10, 11, 12],
-            'Filosofia': [10, 11, 12],
+            'Desenho': [10, 11, 12],
+            'Filosofia': [10, 11],
             'Geometria Descritiva A': [10, 11],
-            'Econemia A': [10, 11],
+            'Economia A': [10, 11],
             'EMRC': [5, 6, 7, 8, 9, 10, 11, 12],
             'MACS': [12],
             'Geografia A': [10,11],
@@ -42,13 +42,13 @@ class Command(BaseCommand):
             'Ciência Política': [12],
             'Biologia e Geologia': [10,11],
             'Matemática A': [10,11,12],
-            'Econemia C': [12],
+            'Economia C': [12]
             
 
 
         }
         
-        self.stdout.write(self.style.SUCCESS('Configurando relações disciplinas-anos...'))
+        self.stdout.write(self.style.SUCCESS('A configurar disciplinas-anos...'))
         
         for disciplina_nome, anos_numeros in configuracoes.items():
             try:
@@ -69,7 +69,7 @@ class Command(BaseCommand):
             except Disciplina.DoesNotExist:
                 self.stdout.write(
                     self.style.WARNING(
-                        f' Disciplina "{disciplina_nome}" não encontrada. Ignorando.'
+                        f' Disciplina "{disciplina_nome}" não encontrada. A ignorar.'
                     )
                 )
         

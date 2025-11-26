@@ -15,7 +15,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #0ea5e9;">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="{% url 'resumos:lista' %}">
-                <img src="{% static 'resumos/images/logo.svg' %}" alt="Banco de Resumos" class="navbar-logo me-2">
+                <img src="{% static 'resumos/images/marista-logo.png' %}" alt="Banco de Resumos" class="navbar-logo me-2" style="height:24px; width:auto; object-fit:contain;">
                 <span class="fs-4 fw-bold">Banco de Resumos</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -53,7 +53,7 @@
                         <a class="nav-link" href="{% url 'resumos:criar' %}">➕ Adicionar Resumo</a>
                     </li>
                     <li class="nav-item">
-                        <span class="nav-link">👤 Olá, {{ user.username }}</span>
+                        <span class="nav-link"> Olá, {{ user.username }}</span>
                     </li>
                     <li class="nav-item">
                         <form method="post" action="{% url 'logout' %}" style="display: inline;">
@@ -98,7 +98,7 @@
     <!-- Footer -->
     <footer class="bg-light text-center text-muted py-3 mt-5">
         <div class="container">
-            <p class="mb-0">&copy; 2025 Banco de Resumos Marista. Elaborado por ex-alunos dos Colégio.</p>
+            <p class="mb-0">&copy; 2025 Banco de Resumos Marista. Elaborado por Diogo Moreira, Francisco Neves e José Oliveira.</p>
         </div>
     </footer>
 
