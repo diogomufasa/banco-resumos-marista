@@ -1,4 +1,4 @@
-# 📚 Banco de Resumos para o Colégio Marista
+# 📚 Banco de Resumos para o Colégio Marista de Carcavelos
 
 ## 🚀 Quickstart
 
@@ -47,6 +47,31 @@ python manage.py runserver
 - **Admin (gestão)**: http://127.0.0.1:8000/admin/
 
 ---
+
+## 🤖 Verificação por AI
+
+Esta aplicação usa a API do Groq para verificar automaticamente ficheiros carregados (PDFs, textos, etc.) antes de os tornar públicos. A verificação é executada em `src/resumos/services/groq_guard.py` e espera a variável de ambiente `GROQ_API_KEY` configurada.
+
+- **O que faz:** envia uma amostra do ficheiro ao modelo `meta-llama/Llama-Guard-4-12B` e recebe uma resposta curta: `safe` (seguro) ou `unsafe\n<categoria>` (inseguro + categoria).
+- **Ambiente:** a função procura a chave em `GROQ_API_KEY`. Se não estiver definida, a verificação falha com a mensagem: "Chave da API do Groq não encontrada. Configure GROQ_API_KEY.".
+
+Como configurar localmente
+
+- Defina a variável de ambiente com a sua chave do Groq.
+
+PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+notepad .env
+```
+
+Bash (Linux / macOS):
+
+```bash
+cp .env.example .env
+nano .env
+```
 
 ## 🎯 Funcionalidades
 
@@ -119,5 +144,29 @@ src/
 - **Bibliotecas**: ReportLab
 - **Python**: 3.x
 
-
 **© 2024 Banco de Resumos Marista - Projeto Escolar**
+
+## 🤖 Verificação AI (Groq Guard)
+
+Esta aplicação usa a API do Groq para verificar automaticamente ficheiros carregados (PDFs, textos, etc.) antes de os tornar públicos. A verificação é executada em `src/resumos/services/groq_guard.py` e espera a variável de ambiente `GROQ_API_KEY` configurada.
+
+- **O que faz:** envia uma amostra do ficheiro ao modelo `meta-llama/Llama-Guard-4-12B` e recebe uma resposta curta: `safe` (seguro) ou `unsafe\n<categoria>` (inseguro + categoria).
+- **Ambiente:** a função procura a chave em `GROQ_API_KEY`. Se não estiver definida, a verificação falha com a mensagem: "Chave da API do Groq não encontrada. Configure GROQ_API_KEY.".
+
+Como configurar localmente
+
+- Defina a variável de ambiente com a sua chave do Groq.
+
+PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+notepad .env
+```
+
+Bash (Linux / macOS):
+
+```bash
+cp .env.example .env
+nano .env
+```
