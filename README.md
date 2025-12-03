@@ -31,9 +31,9 @@ python manage.py createsuperuser
 
 Preencha:
 
-- Username (nome de usuário)
+- Username
 - Email (opcional)
-- Password (senha)
+- Password
 
 ### 5. Executar o Servidor
 
@@ -146,6 +146,7 @@ src/
 
 **© 2024 Banco de Resumos Marista - Projeto Escolar**
 
+<<<<<<< HEAD
 ## 🤖 Verificação AI (Groq Guard)
 
 Esta aplicação usa a API do Groq para verificar automaticamente ficheiros carregados (PDFs, textos, etc.) antes de os tornar públicos. A verificação é executada em `src/resumos/services/groq_guard.py` e espera a variável de ambiente `GROQ_API_KEY` configurada.
@@ -170,3 +171,5 @@ Bash (Linux / macOS):
 cp .env.example .env
 nano .env
 ```
+=======
+>>>>>>> 63f0fe5faa54054e0d3b13e05aea3c700b614fbf
