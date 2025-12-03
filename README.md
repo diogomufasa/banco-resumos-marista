@@ -31,9 +31,9 @@ python manage.py createsuperuser
 
 Preencha:
 
-- Username (nome de usuário)
+- Username
 - Email (opcional)
-- Password (senha)
+- Password
 
 ### 5. Executar o Servidor
 
@@ -121,3 +121,4 @@ src/
 
 
 **© 2024 Banco de Resumos Marista - Projeto Escolar**
+
