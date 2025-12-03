@@ -1,5 +1,3 @@
-"""Helper utilities to screen uploaded files via Groq content moderation."""
-
 import base64
 import mimetypes
 import os
@@ -17,7 +15,7 @@ TEXT_TYPES = {
     "application/x-sh",
     "application/x-python-code",
 }
-PROMPT_TEMPLATE = (
+PROMPT = (
     "Classifique se um arquivo pode ser partilhado dentro de uma plataforma de"
     " resumos escolares (nível fundamental/médio).\n"
     "Considere o nome, tipo, tamanho e a amostra fornecida.\n"
@@ -86,7 +84,7 @@ def verify_file_with_groq(uploaded_file: UploadedFile) -> Tuple[bool, str]:
     try:
         response = client.chat.completions.create(
             model="meta-llama/Llama-Guard-4-12B",
-            messages=[{"role": "user", "content": f"{PROMPT_TEMPLATE}\n\n{content}"}],
+            messages=[{"role": "user", "content": f"{PROMPT}\n\n{content}"}],
             temperature=0,
             max_tokens=64,
         )
