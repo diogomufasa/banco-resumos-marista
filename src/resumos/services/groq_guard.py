@@ -17,8 +17,8 @@ TEXT_TYPES = {
 }
 PROMPT = (
     "Classifique se um arquivo pode ser partilhado dentro de uma plataforma de"
-    " resumos escolares (nível fundamental/médio).\n"
-    "Considere o nome, tipo, tamanho e a amostra fornecida.\n"
+    " resumos escolares (ensino básico e secundário).\n"
+    "Analise o nome e o conteúdo. Não aceites se tiver em branco\n"
     "Se o conteúdo for seguro responda apenas 'safe'.\n"
     "Se o conteúdo violar alguma categoria da taxonomy do Llama Guard, responda"
     " 'unsafe\\n<categoria>'."
