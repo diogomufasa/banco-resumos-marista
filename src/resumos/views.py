@@ -15,7 +15,7 @@ def signup(request):
     View para registar novos utilizadores
     """
     if request.user.is_authenticated:
-        messages.info(request, 'Você já está autenticado.')
+        messages.info(request, 'Já estás autenticado.')
         return redirect('resumos:lista')
     
     if request.method == 'POST':
@@ -28,7 +28,7 @@ def signup(request):
         
         # Validações
         if not username or not email or not password:
-            messages.error(request, 'Por favor, preencha todos os campos obrigatórios.')
+            messages.error(request, 'Por favor, preenche todos os campos obrigatórios.')
             return render(request, 'resumos/signup.html')
         
         if password != password_confirm:
@@ -36,7 +36,7 @@ def signup(request):
             return render(request, 'resumos/signup.html')
         
         if len(password) < 6:
-            messages.error(request, 'A senha deve ter pelo menos 6 caracteres.')
+            messages.error(request, 'A password deve ter pelo menos 6 caracteres.')
             return render(request, 'resumos/signup.html')
         
         if User.objects.filter(username=username).exists():

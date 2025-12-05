@@ -16,7 +16,7 @@ TEXT_TYPES = {
     "application/x-python-code",
 }
 PROMPT = (
-    "Classifique se um arquivo pode ser partilhado dentro de uma plataforma de"
+    "Classifique se um ficheiro pode ser partilhado dentro de uma plataforma de"
     " resumos escolares (ensino básico e secundário).\n"
     "Analise o nome e o conteúdo. Não aceites se tiver em branco\n"
     "Se o conteúdo for seguro responda apenas 'safe'.\n"
