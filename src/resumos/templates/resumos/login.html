@@ -7,16 +7,16 @@
     <div class="col-lg-5 mx-auto">
         <div class="card shadow">
             <div class="card-header text-white text-center" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);">
-                <h2 class="mb-0">🔐 Entrar</h2>
+                <h2 class="mb-0">Entrar</h2>
             </div>
             <div class="card-body">
                 <p class="text-center text-muted mb-4">
-                    Entre com sua conta para adicionar e gerenciar seus resumos
+                    Entre com sua conta para adicionar resumos
                 </p>
 
                 {% if form.errors %}
                 <div class="alert alert-danger">
-                    <strong>Erro!</strong> Nome de usuário ou senha incorretos.
+                    <strong>Erro!</strong> Nome de Utilizador e Password
                 </div>
                 {% endif %}
 
@@ -24,7 +24,7 @@
                     {% csrf_token %}
                     
                     <div class="mb-3">
-                        <label for="username" class="form-label">Nome de Usuário</label>
+                        <label for="username" class="form-label">Nome de Utilizador</label>
                         <input 
                             type="text" 
                             class="form-control" 
@@ -35,7 +35,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="password" class="form-label">Senha</label>
+                        <label for="password" class="form-label">Password</label>
                         <input 
                             type="password" 
                             class="form-control" 
@@ -51,10 +51,10 @@
                             Entrar
                         </button>
                         <a href="{% url 'resumos:signup' %}" class="btn btn-success">
-                            Criar Nova Conta
+                            Criar Conta nova 
                         </a>
                         <a href="{% url 'resumos:lista' %}" class="btn btn-secondary">
-                            Voltar para Lista de Resumos
+                            Voltar
                         </a>
                     </div>
                 </form>

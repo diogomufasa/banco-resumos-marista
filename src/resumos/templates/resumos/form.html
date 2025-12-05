@@ -11,8 +11,8 @@
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
-        <h4 class="mt-3 text-white">Verificando por IA</h4>
-        <p class="text-white-50">Analisando o arquivo enviado...</p>
+        <h4 class="mt-3 text-white">A verificar conteúdo...</h4>
+        <p class="text-white-50">Uploading....</p>
     </div>
 </div>
 
@@ -24,7 +24,7 @@
                     {% if resumo %}
                         ✏️ Editar Resumo
                     {% else %}
-                        ✍️ Criar Novo Resumo
+                        ✍️ Criar Resumo Novo
                     {% endif %}
                 </h2>
             </div>
@@ -111,16 +111,16 @@
                             {% endfor %}
                         </div>
                         <small class="form-text text-muted">
-                            Selecione as tags que melhor descrevem seu resumo.
+                            Seleciona as tags adequadas
                         </small>
                     </div>
 
                     <!-- Arquivo Anexo -->
                     <div class="mb-3">
-                        <label for="arquivo" class="form-label">Arquivo Anexo (opcional)</label>
+                        <label for="arquivo" class="form-label">Resumo em ficheiro (opcional)</label>
                         {% if resumo and resumo.arquivo %}
                         <div class="alert alert-info mb-2">
-                            📎 Arquivo atual: <a href="{{ resumo.arquivo.url }}" target="_blank">{{ resumo.arquivo.name }}</a>
+                            📎 Ficheiro atual: <a href="{{ resumo.arquivo.url }}" target="_blank">{{ resumo.arquivo.name }}</a>
                         </div>
                         {% endif %}
                         <input type="file" class="form-control" id="arquivo" name="arquivo">
@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processando...';
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> A processar...';
         }
     });
     
@@ -201,7 +201,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const disciplinaHelp = document.getElementById('disciplinaHelp');
     const selectedDisciplina = disciplinaSelect.value;
     
-    // Store all original disciplines
     const allDisciplinas = Array.from(disciplinaSelect.options).slice(1).map(opt => ({
         id: opt.value,
         nome: opt.text
@@ -211,7 +210,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const anoId = this.value;
         
         if (!anoId) {
-            // Show all disciplines and help text
             updateDisciplinaSelect(allDisciplinas, selectedDisciplina);
             disciplinaHelp.style.display = 'block';
             return;
@@ -219,7 +217,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         disciplinaHelp.style.display = 'none';
         
-        // Fetch disciplines for selected year
         fetch(`{% url 'resumos:disciplinas_por_ano' %}?ano_id=${anoId}`)
             .then(response => response.json())
             .then(data => {
@@ -231,10 +228,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     function updateDisciplinaSelect(disciplinas, keepSelected) {
-        // Clear existing options except the first one
         disciplinaSelect.innerHTML = '<option value="">Selecione uma disciplina</option>';
         
-        // Add filtered disciplines
         disciplinas.forEach(disc => {
             const option = document.createElement('option');
             option.value = disc.id;

@@ -15,7 +15,7 @@
 
         <!-- Card do Resumo -->
         <div class="card shadow">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-primary">
                 <h2 class="mb-0">{{ resumo.titulo }}</h2>
             </div>
             <div class="card-body">
@@ -53,7 +53,7 @@
                 <hr>
                 <div class="mt-3">
                     <a href="{{ resumo.arquivo.url }}" class="btn btn-success" download>
-                        📥 Descarregar Arquivo Anexo
+                        📥 Descarregar Resumo
                     </a>
                 </div>
                 {% endif %}
@@ -62,7 +62,7 @@
             <!-- Ações -->
             <div class="card-footer">
                 <a href="{% url 'resumos:lista' %}" class="btn btn-secondary">← Voltar</a>
-                <a href="{% url 'resumos:exportar_pdf' resumo.pk %}" class="btn btn-info"> Descarregar PDF</a>
+                <!-- <a href="{% url 'resumos:exportar_pdf' resumo.pk %}" class="btn btn-info"> Descarregar PDF</a> -->
                 {% if user == resumo.autor %}
                 <a href="{% url 'resumos:editar' resumo.pk %}" class="btn btn-warning"> Editar</a>
                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">

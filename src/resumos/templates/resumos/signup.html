@@ -11,7 +11,7 @@
             </div>
             <div class="card-body">
                 <p class="text-center text-muted mb-4">
-                    Crie sua conta para começar a partilhar resumos
+                    Cria a tua conta para começares a partilhar os teus resumos
                 </p>
 
                 <form method="post">
@@ -66,7 +66,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="password" class="form-label">Senha *</label>
+                        <label for="password" class="form-label">Password *</label>
                         <input 
                             type="password" 
                             class="form-control" 
@@ -78,7 +78,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="password_confirm" class="form-label">Confirmar Senha *</label>
+                        <label for="password_confirm" class="form-label">Confirmar Password *</label>
                         <input 
                             type="password" 
                             class="form-control" 
@@ -90,13 +90,13 @@
 
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-success btn-lg">
-                            🚀 Criar Conta
+                         Criar Conta
                         </button>
                         <a href="{% url 'login' %}" class="btn" style="background-color: #0ea5e9; color: white;">
                             Já tem conta? Entrar
                         </a>
                         <a href="{% url 'resumos:lista' %}" class="btn btn-secondary">
-                            Voltar para Lista de Resumos
+                            Voltar
                         </a>
                     </div>
                 </form>

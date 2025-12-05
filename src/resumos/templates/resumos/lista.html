@@ -91,7 +91,7 @@
                 <h4 class="alert-heading">📚 Nenhum resumo encontrado</h4>
                 <p>Ainda não há resumos disponíveis com os filtros selecionados.</p>
                 {% if user.is_authenticated %}
-                <a href="{% url 'resumos:criar' %}" class="btn mt-3" style="background-color: #0ea5e9; color: white;">➕ Adicionar Primeiro Resumo</a>
+                <a href="{% url 'resumos:criar' %}" class="btn mt-3" style="background-color: #0ea5e9; color: white;">+ Adiciona um resumo!</a>
                 {% endif %}
             </div>
         </div>
@@ -106,7 +106,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const disciplinaSelect = document.getElementById('disciplina');
     const selectedDisciplina = disciplinaSelect.value;
     
-    // Store all original disciplines
     const allDisciplinas = Array.from(disciplinaSelect.options).slice(1).map(opt => ({
         id: opt.value,
         nome: opt.text
@@ -116,12 +115,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const anoId = this.value;
         
         if (!anoId) {
-            // Show all disciplines
             updateDisciplinaSelect(allDisciplinas, selectedDisciplina);
             return;
         }
         
-        // Fetch disciplines for selected year
         fetch(`{% url 'resumos:disciplinas_por_ano' %}?ano_id=${anoId}`)
             .then(response => response.json())
             .then(data => {
@@ -133,10 +130,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     function updateDisciplinaSelect(disciplinas, keepSelected) {
-        // Clear existing options except the first one
         disciplinaSelect.innerHTML = '<option value="">Todas as disciplinas</option>';
         
-        // Add filtered disciplines
         disciplinas.forEach(disc => {
             const option = document.createElement('option');
             option.value = disc.id;
