@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from resumos.models import Disciplina, Ano, Resumo
 
 class Command(BaseCommand):
-    help = 'Adiciona dados iniciais (disciplinas e anos) ao banco de dados'
+    help = 'Adiciona dados iniciais (disciplinas e anos) à base de dados.'
 
     def handle(self, *args, **kwargs):
         self.stdout.write(self.style.SUCCESS('A criar dados...'))
