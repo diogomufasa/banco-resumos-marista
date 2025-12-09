@@ -132,7 +132,7 @@ src/
 │       └── resumos/
 │           └── css/
 │               └── style.css
-├── media/                 # Uploads de arquivos
+├── media/                 # Uploads de ficheiros
 └── manage.py             # Script de gestão Django
 ```
 
@@ -141,7 +141,6 @@ src/
 - **Backend**: Django 5.2
 - **Frontend**: HTML5, Bootstrap 5, CSS3, JavaScript
 - **Base de Dados**: SQLite
-- **Bibliotecas**: ReportLab
 - **Python**: 3.x
 
 **© 2024 Banco de Resumos Marista - Projeto Escolar**

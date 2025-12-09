@@ -114,16 +114,15 @@
                             Seleciona as tags adequadas
                         </small>
                     </div>
-
-                    <!-- Arquivo Anexo -->
+                    <!-- Ficheiro -->
                     <div class="mb-3">
-                        <label for="arquivo" class="form-label">Resumo em ficheiro (opcional)</label>
-                        {% if resumo and resumo.arquivo %}
+                        <label for="ficheiro" class="form-label">Resumo em ficheiro <span class="text-danger">*</span></label>
+                        {% if resumo and resumo.ficheiro %}
                         <div class="alert alert-info mb-2">
-                            📎 Ficheiro atual: <a href="{{ resumo.arquivo.url }}" target="_blank">{{ resumo.arquivo.name }}</a>
+                            📎 Ficheiro atual: <a href="{{ resumo.ficheiro.url }}" target="_blank">{{ resumo.ficheiro.name }}</a>
                         </div>
                         {% endif %}
-                        <input type="file" class="form-control" id="arquivo" name="arquivo">
+                        <input type="file" class="form-control" id="ficheiro" name="ficheiro" {% if not resumo %}required{% endif %}>
                         <small class="form-text text-muted">
                             Formatos aceitos: PDF, DOC, DOCX, TXT, imagens (máx. 10MB)
                         </small>

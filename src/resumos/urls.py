@@ -10,7 +10,6 @@ urlpatterns = [
     path('criar/', views.criar_resumo, name='criar'),
     path('resumo/<int:pk>/editar/', views.editar_resumo, name='editar'),
     path('resumo/<int:pk>/deletar/', views.apagar_resumo, name='apagar'),
-    path('resumo/<int:pk>/exportar-pdf/', views.exportar_pdf, name='exportar_pdf'),
     path('perfil/<str:username>/', views.perfil_usuario, name='perfil'),
     path('api/disciplinas-por-ano/', views.get_disciplinas_por_ano, name='disciplinas_por_ano'),
 ]

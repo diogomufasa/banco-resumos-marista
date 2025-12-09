@@ -16,12 +16,29 @@ TEXT_TYPES = {
     "application/x-python-code",
 }
 PROMPT = (
-    "Classifique se um ficheiro pode ser partilhado dentro de uma plataforma de"
-    " resumos escolares (ensino básico e secundário).\n"
-    "Analise o nome e o conteúdo. Não aceites se tiver em branco\n"
-    "Se o conteúdo for seguro responda apenas 'safe'.\n"
-    "Se o conteúdo violar alguma categoria da taxonomy do Llama Guard, responda"
-    " 'unsafe\\n<categoria>'."
+    "You are reviewing educational materials for a school platform. Students share study resources.\n\n"
+    "ALWAYS mark as 'safe':\n"
+    "- ALL educational content (math, science, history, literature, etc.)\n"
+    "- Study guides, worksheets, practice problems, assignments\n"
+    "- Academic texts with student names, dates, school information\n"
+    "- Educational diagrams, formulas, graphs, tables\n"
+    "- ANY content related to learning and school subjects\n"
+    "- Educational health topics (first aid, wellbeing, safety)\n"
+    "- Mentions of injury/illness in an academic or historical context\n"
+    "- Historical descriptions of wars, conflicts, or injuries when presented as study material\n"
+    "- References to weapons or attacks inside historical/academic exercises (these are SAFE)\n\n"
+    "Mark as 'unsafe' ONLY if you find explicit, direct content such as:\n"
+    "- Pornographic images or explicit sexual content\n"
+    "- Instructions to build weapons or commit crimes\n"
+    "- Severe threats or hate speech targeting individuals\n"
+    "- Encouragement or instructions for self-harm or suicide\n\n"
+    "Violence classification: Do NOT flag as unsafe if the mention is educational, historical, or academic.\n"
+    "Only flag S4 if the text celebrates, encourages, or instructs violence in a non-educational way.\n\n"
+    "Self-harm classification: Do NOT flag as unsafe if the context is educational, informative, or historical.\n"
+    "Only flag S8 if the text encourages, instructs, or urges self-harm.\n\n"
+    "NOTE: School assignments may contain personal information (student names, dates) - this is NORMAL and SAFE.\n"
+    "Privacy concerns do NOT apply to educational materials.\n\n"
+    "Respond 'safe' for any educational or neutral content."
 )
 
 
@@ -74,7 +91,7 @@ def verify_file_with_groq(uploaded_file: UploadedFile) -> Tuple[bool, str]:
     sample_text, sample_kind = _sample_to_text(sample, mime_type)
 
     content = (
-        f"Arquivo: {uploaded_file.name}\n"
+        f"Ficheiro: {uploaded_file.name}\n"
         f"Tamanho: {getattr(uploaded_file, 'size', len(sample))} bytes\n"
         f"MIME: {mime_type}\n"
         f"Amostra ({sample_kind}):\n{sample_text}"
@@ -99,4 +116,4 @@ def verify_file_with_groq(uploaded_file: UploadedFile) -> Tuple[bool, str]:
     if normalized.startswith("safe"):
         return True, ""
 
-    return False, f"Arquivo marcado como inseguro: {message}"
+    return False, f"Ficheiro marcado como inseguro: {message}"

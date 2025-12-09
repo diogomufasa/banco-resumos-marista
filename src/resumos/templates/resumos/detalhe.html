@@ -4,98 +4,126 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-lg-8 mx-auto">
-        <!-- Breadcrumb -->
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'resumos:lista' %}">Resumos</a></li>
-                <li class="breadcrumb-item active">{{ resumo.titulo }}</li>
-            </ol>
-        </nav>
+  <div class="col-lg-8 mx-auto">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+          <a href="{% url 'resumos:lista' %}">Resumos</a>
+        </li>
+        <li class="breadcrumb-item active">{{ resumo.titulo }}</li>
+      </ol>
+    </nav>
 
-        <!-- Card do Resumo -->
-        <div class="card shadow">
-            <div class="card-header bg-primary">
-                <h2 class="mb-0">{{ resumo.titulo }}</h2>
-            </div>
-            <div class="card-body">
-                <!-- Badges -->
-                <div class="mb-3">
-                    <span class="badge bg-primary me-2"> {{ resumo.disciplina.nome }}</span>
-                    <span class="badge bg-secondary me-2"> {{ resumo.ano.numero }}º Ano</span>
-                    {% if resumo.tags.exists %}
-                        {% for tag in resumo.tags.all %}
-                        <span class="badge me-2" style="background-color: {{ tag.cor }};">{{ tag.nome }}</span>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-
-                <!-- Info do Autor -->
-                <div class="mb-3 text-muted">
-                    <small>
-                         Por <a href="{% url 'resumos:perfil' resumo.autor.username %}"><strong>{{ resumo.autor.username }}</strong></a> • 
-                         {{ resumo.data_criacao|date:"d/m/Y às H:i" }}
-                        {% if resumo.data_atualizacao != resumo.data_criacao %}
-                         Atualizado em {{ resumo.data_atualizacao|date:"d/m/Y às H:i" }}
-                        {% endif %}
-                    </small>
-                </div>
-
-                <hr>
-
-                <!-- Conteúdo do Resumo -->
-                <div class="resumo-conteudo">
-                    {{ resumo.conteudo|linebreaks }}
-                </div>
-
-                <!-- Arquivo Anexo -->
-                {% if resumo.arquivo %}
-                <hr>
-                <div class="mt-3">
-                    <a href="{{ resumo.arquivo.url }}" class="btn btn-success" download>
-                        📥 Descarregar Resumo
-                    </a>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Ações -->
-            <div class="card-footer">
-                <a href="{% url 'resumos:lista' %}" class="btn btn-secondary">← Voltar</a>
-                <!-- <a href="{% url 'resumos:exportar_pdf' resumo.pk %}" class="btn btn-info"> Descarregar PDF</a> -->
-                {% if user == resumo.autor %}
-                <a href="{% url 'resumos:editar' resumo.pk %}" class="btn btn-warning"> Editar</a>
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                     Apagar
-                </button>
-                {% endif %}
-            </div>
+    <!-- Card do Resumo -->
+    <div class="card shadow">
+      <div class="card-header bg-primary">
+        <h2 class="mb-0">{{ resumo.titulo }}</h2>
+      </div>
+      <div class="card-body">
+        <!-- Badges -->
+        <div class="mb-3">
+          <span class="badge bg-primary me-2">
+            {{ resumo.disciplina.nome }}</span
+          >
+          <span class="badge bg-secondary me-2">
+            {{ resumo.ano.numero }}º Ano</span
+          >
+          {% if resumo.tags.exists %}
+            {% for tag in resumo.tags.all %}
+              <span class="badge me-2" style="background-color: {{ tag.cor }};">{{ tag.nome }}</span>
+            {% endfor %}
+          {% endif %}
         </div>
+
+        <!-- Info do Autor -->
+        <div class="mb-3 text-muted">
+          <small>
+            Por
+            <a href="{% url 'resumos:perfil' resumo.autor.username %}"
+              ><strong>{{ resumo.autor.username }}</strong></a
+            >
+            • {{ resumo.data_criacao|date:"d/m/Y às H:i" }}
+            {% if resumo.data_atualizacao != resumo.data_criacao %}
+              Atualizado em {{ resumo.data_atualizacao|date:"d/m/Y às H:i" }}
+            {% endif %}
+          </small>
+        </div>
+
+        <hr />
+
+        <!-- Conteúdo do Resumo -->
+        <div class="resumo-conteudo">{{ resumo.conteudo|linebreaks }}</div>
+
+        <!-- Ficheiro Anexo -->
+        {% if resumo.ficheiro %}
+        <hr />
+        <div class="mt-3">
+          <a href="{{ resumo.ficheiro.url }}" class="btn btn-success" download>
+            📥 Descarregar Resumo
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Ações -->
+      <div class="card-footer">
+        <a href="{% url 'resumos:lista' %}" class="btn btn-secondary"
+          >← Voltar</a
+        >
+        {% if user == resumo.autor %}
+        <a href="{% url 'resumos:editar' resumo.pk %}" class="btn btn-warning">
+          Editar</a
+        >
+        <button
+          type="button"
+          class="btn btn-danger"
+          data-bs-toggle="modal"
+          data-bs-target="#deleteModal"
+        >
+          Apagar
+        </button>
+        {% endif %}
+      </div>
     </div>
+  </div>
 </div>
 
-<!-- Modal de Confirmação de Exclusão -->
 {% if user == resumo.autor %}
 <div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar Exclusão</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Tem certeza que deseja excluir o resumo <strong>"{{ resumo.titulo }}"</strong>?</p>
-                <p class="text-danger">Esta ação não pode ser desfeita!</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form method="post" action="{% url 'resumos:apagar' resumo.pk %}" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Sim, Excluir</button>
-                </form>
-            </div>
-        </div>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmar</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p>
+          Tem certeza que deseja apagar o resumo
+          <strong>"{{ resumo.titulo }}"</strong>?
+        </p>
+        <p class="text-danger">Esta ação não pode ser revertida!</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <form
+          method="post"
+          action="{% url 'resumos:apagar' resumo.pk %}"
+          style="display: inline"
+        >
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">Sim, Excluir</button>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
 {% endif %}
+
 {% endblock %}
