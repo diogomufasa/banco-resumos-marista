@@ -143,4 +143,5 @@ src/
 - **Base de Dados**: SQLite
 - **Python**: 3.x
 
-**© 2024 Banco de Resumos Marista - Projeto Escolar**
+**© 2026 Banco de Resumos Marista - Projeto Escolar**
+
