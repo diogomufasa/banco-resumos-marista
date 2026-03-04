@@ -6,9 +6,7 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
 from .models import Resumo, Disciplina, Ano, Tag
-import os
-import groq
-from .services.groq_guard import verify_file_with_groq
+from .services.groq_guard import verify_file_with_groq, verify_text_with_groq
 
 
 def signup(request):
@@ -49,6 +47,29 @@ def signup(request):
         if User.objects.filter(email=email).exists():
             messages.error(request, 'Este email já está registado.')
             return render(request, 'resumos/signup.html')
+
+        # Verificar username, nome e apelido com Groq
+        is_safe, error_message = verify_text_with_groq(
+            username, label="username")
+        if not is_safe:
+            messages.error(
+                request, f'Nome de utilizador não permitido: {error_message}')
+            return render(request, 'resumos/signup.html')
+
+        if first_name:
+            is_safe, error_message = verify_text_with_groq(
+                first_name, label="nome")
+            if not is_safe:
+                messages.error(request, f'Nome não permitido: {error_message}')
+                return render(request, 'resumos/signup.html')
+
+        if last_name:
+            is_safe, error_message = verify_text_with_groq(
+                last_name, label="apelido")
+            if not is_safe:
+                messages.error(
+                    request, f'Apelido não permitido: {error_message}')
+                return render(request, 'resumos/signup.html')
 
         # Criar utilizador
         try:
@@ -146,6 +167,18 @@ def criar_resumo(request):
             messages.error(request, 'O ficheiro de resumo é obrigatório.')
             return render(request, 'resumos/form.html', context)
 
+        is_safe_titulo, error_titulo = verify_text_with_groq(
+            titulo, label="título do resumo")
+        if not is_safe_titulo:
+            messages.error(request, f'Título não permitido: {error_titulo}')
+            return render(request, 'resumos/form.html', context)
+
+        is_safe_text, error_text = verify_text_with_groq(
+            conteudo, label="descrição do resumo")
+        if not is_safe_text:
+            messages.error(request, error_text)
+            return render(request, 'resumos/form.html', context)
+
         is_safe, error_message = verify_file_with_groq(ficheiro)
         if not is_safe:
             messages.error(request, error_message)
@@ -186,11 +219,35 @@ def editar_resumo(request, pk):
     tags = Tag.objects.all()
 
     if request.method == 'POST':
-        resumo.titulo = request.POST.get('titulo')
-        resumo.conteudo = request.POST.get('conteudo')
+        novo_titulo = request.POST.get('titulo')
+        novo_conteudo = request.POST.get('conteudo')
         resumo.disciplina_id = request.POST.get('disciplina')
         resumo.ano_id = request.POST.get('ano')
         tag_ids = request.POST.getlist('tags')
+
+        is_safe_titulo, error_titulo = verify_text_with_groq(
+            novo_titulo, label="título do resumo")
+        if not is_safe_titulo:
+            messages.error(request, f'Título não permitido: {error_titulo}')
+            return render(request, 'resumos/form.html', {
+                'resumo': resumo,
+                'disciplinas': disciplinas,
+                'anos': anos,
+                'tags': tags,
+            })
+        resumo.titulo = novo_titulo
+
+        is_safe_text, error_text = verify_text_with_groq(
+            novo_conteudo, label="descrição do resumo")
+        if not is_safe_text:
+            messages.error(request, error_text)
+            return render(request, 'resumos/form.html', {
+                'resumo': resumo,
+                'disciplinas': disciplinas,
+                'anos': anos,
+                'tags': tags,
+            })
+        resumo.conteudo = novo_conteudo
 
         if request.FILES.get('ficheiro'):
             ficheiro = request.FILES.get('ficheiro')
@@ -243,7 +300,7 @@ def perfil_usuario(request, username):
     resumos = Resumo.objects.filter(autor=usuario)
 
     return render(request, 'resumos/perfil.html', {
-        'usuario': usuario,
+        'utilizador': usuario,
         'resumos': resumos,
     })
 

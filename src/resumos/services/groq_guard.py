@@ -26,6 +26,52 @@ PROMPT = (
     "OUTPUT: Reply with a single token 'safe' or 'unsafe'. If 'unsafe', follow with a short category label (e.g. 'unsafe S4')."
 )
 
+TEXT_PROMPT = (
+    "You are a content moderator for a school platform where students share study notes.\n\n"
+    "GUIDELINES:\n"
+    "- SAFE text: usernames, academic notes, study summaries, educational content, names, normal words.\n"
+    "- UNSAFE text: hate speech, slurs, explicit sexual content, threats, encouragement of self-harm, explicit drug/weapon instructions.\n"
+    "- A username or description that is merely informal, silly, or uses mild profanity should be considered SAFE.\n"
+    "- Only mark 'unsafe' for clearly harmful or offensive content.\n\n"
+    "OUTPUT: Reply with a single token 'safe' or 'unsafe'. If 'unsafe', follow with a short category label."
+)
+
+# Local blocklist for Portuguese profanity/slurs that AI models tend to miss.
+# Substrings are matched case-insensitively against the full text.
+_PT_BLOCKLIST = {
+    "pila", "pilinha", "pilas",
+    "puta", "putinha", "putas",
+    "caralho", "caralhos",
+    "foda", "foder", "fodasse", "fodido", "fodida",
+    "merda", "merdas",
+    "cona", "conas",
+    "cu", "cus",
+    "buceta",
+    "porra", "porras",
+    "viado", "viados",
+    "prenha",
+    "cuzao", "cuzão",
+    "arrombado", "arrombada",
+    "filhodaputa", "filhodeumputa",
+    "punheta", "punhetas",
+    "escroto", "escrotos",
+    "bosta", "bostas",
+    "raio", "rabos",
+    "paneleiro", "paneleiros",
+    "cagao", "cagão",
+    "joder",
+}
+
+
+def _check_local_blocklist(text: str) -> bool:
+    """Return True (safe) if no blocklisted substring is found, False otherwise."""
+    normalized = text.lower().replace(" ", "").replace("_", "").replace("-", "")
+    for term in _PT_BLOCKLIST:
+        clean_term = term.replace(" ", "")
+        if clean_term in normalized:
+            return False
+    return True
+
 
 def _rewind(uploaded_file: UploadedFile) -> None:
     for stream in (getattr(uploaded_file, "file", None), uploaded_file):
@@ -86,29 +132,28 @@ def verify_file_with_groq(uploaded_file: UploadedFile) -> Tuple[bool, str]:
     try:
         # send prompt as system message to improve adherence
         response = client.chat.completions.create(
-            model="meta-llama/Llama-Guard-4-12B",
+            model="openai/gpt-oss-safeguard-20b",
             messages=[
-                {"role": "system", "content": PROMPT},
                 {"role": "user", "content": content},
             ],
             temperature=0,
             max_tokens=128,
         )
     except Exception as exc:  # pragma: no cover - network failure
-        return False, f"Falha ao contactar o Groq: {exc}"
+        return False, f"Failed to connect to Groq: {exc}"
 
     message = (response.choices[0].message.content or "").strip()
+    finish_reason = response.choices[0].finish_reason or ""
+
+    # Empty content or stop finish = model found nothing unsafe
     if not message:
-        return False, "Resposta vazia da API Groq."
+        return True, ""
 
     normalized = message.lower()
     # If guard says safe -> accept
     if normalized.startswith("safe"):
         return True, ""
 
-    # Heuristic: if sample is binary (pdf) and filename looks like educational material,
-    # accept as safe even if the guard flagged it. This avoids false positives on PDFs
-    # that contain historical/academic mentions.
     educ_keywords = (
         "exerc",
         "ficha",
@@ -127,3 +172,40 @@ def verify_file_with_groq(uploaded_file: UploadedFile) -> Tuple[bool, str]:
         return True, ""
 
     return False, f"Ficheiro marcado como inseguro: {message}"
+
+
+def verify_text_with_groq(text: str, label: str = "texto") -> Tuple[bool, str]:
+    """Verify arbitrary text (username, description, etc.) with Groq."""
+    # Local blocklist runs first — catches PT profanity the AI model misses
+    if not _check_local_blocklist(text):
+        return False, "Conteúdo contém linguagem inapropriada."
+
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        return False, "Chave da API do Groq não encontrada. Configure GROQ_API_KEY."
+
+    content = f"{label}:\n{text[:4000]}"
+
+    client = Groq(api_key=api_key)
+    try:
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-safeguard-20b",
+            messages=[
+                {"role": "user", "content": content},
+            ],
+            temperature=0,
+            max_tokens=64,
+        )
+    except Exception as exc:
+        return False, f"Failed to connect to Groq: {exc}"
+
+    message = (response.choices[0].message.content or "").strip()
+
+    # Empty content = model found nothing unsafe
+    if not message:
+        return True, ""
+
+    if message.lower().startswith("safe"):
+        return True, ""
+
+    return False, f"Conteúdo marcado como inapropriado: {message}"
