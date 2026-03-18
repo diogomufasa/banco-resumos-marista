@@ -3,6 +3,7 @@ import mimetypes
 import os
 from typing import Tuple
 
+from django.conf import settings
 from django.core.files.uploadedfile import UploadedFile
 from groq import Groq
 
@@ -16,61 +17,37 @@ TEXT_TYPES = {
     "application/x-python-code",
 }
 PROMPT = (
-    "You are reviewing educational materials for a school platform. Students share study resources.\n\n"
-    "GUIDELINES:\n"
-    "- ALWAYS consider material that is academic, historical, instructional or a school worksheet as SAFE.\n"
-    "- Examples of SAFE content: math problems, science exercises, literature notes, historical excerpts, diagrams, formulas, worksheets, answer keys, and corrections.\n"
-    "- If a file is a PDF or binary blob and its filename suggests it is an exercise/worksheet/answer key (e.g. 'exerc', 'ficha', 'resumo', 'apont', 'correc', 'correção', 'prova', 'exame', 'tp'), treat it as educational and SAFE unless it clearly contains instructions to commit violent or illegal acts.\n"
-    "- ONLY mark 'unsafe' when the content explicitly contains: pornographic material, explicit instructions to build weapons or commit crimes, severe targeted threats, or explicit encouragement of self-harm/suicide.\n"
-    "- Mentions of violence or weapons in an academic, historical, or analytical context should NOT be marked as unsafe.\n\n"
-    "OUTPUT: Reply with a single token 'safe' or 'unsafe'. If 'unsafe', follow with a short category label (e.g. 'unsafe S4')."
+    "You are a content moderator for a Catholic school platform (Colégio Marista) where students upload study notes.\n\n"
+    "TASK: Decide if the uploaded file content is appropriate for a school environment.\n\n"
+    "MARK AS SAFE only if the content is clearly:\n"
+    "- Academic study notes, summaries, worksheets, exercises, formulas, diagrams\n"
+    "- School-related documents (tests, exams, answer keys, presentations, essays)\n"
+    "- Educational images or charts\n\n"
+    "MARK AS UNSAFE if the content:\n"
+    "- Is completely unrelated to school/academic work (e.g. random files, games, personal media)\n"
+    "- Contains pornographic or sexually explicit material\n"
+    "- Contains explicit instructions to build weapons or commit crimes\n"
+    "- Contains severe threats or encouragement of self-harm\n"
+    "- Contains hate speech or targeted harassment\n\n"
+    "If the file appears to be binary/unreadable but its filename and type suggest it is a school document, mark as SAFE.\n"
+    "If the file appears to be binary/unreadable and has no clear academic context, mark as UNSAFE.\n\n"
+    "OUTPUT: Reply with ONLY 'safe' or 'unsafe'. No explanation."
 )
 
 TEXT_PROMPT = (
-    "You are a content moderator for a school platform where students share study notes.\n\n"
-    "GUIDELINES:\n"
-    "- SAFE text: usernames, academic notes, study summaries, educational content, names, normal words.\n"
-    "- UNSAFE text: hate speech, slurs, explicit sexual content, threats, encouragement of self-harm, explicit drug/weapon instructions.\n"
-    "- A username or description that is merely informal, silly, or uses mild profanity should be considered SAFE.\n"
-    "- Only mark 'unsafe' for clearly harmful or offensive content.\n\n"
-    "OUTPUT: Reply with a single token 'safe' or 'unsafe'. If 'unsafe', follow with a short category label."
+    "You are a strict content moderator for a Catholic school platform (Colégio Marista) where students share study notes.\n\n"
+    "TASK: Decide if the following username, name, or description is appropriate for a school environment.\n\n"
+    "MARK AS UNSAFE if the text contains or embeds (even concatenated without spaces):\n"
+    "- Portuguese or English profanity, slurs, or vulgar words (e.g. puta, caralho, merda, foda, pila, punheta, cona, cu, buceta, viado, etc.)\n"
+    "- Sexual references or innuendo\n"
+    "- Hate speech, insults, or targeted harassment\n"
+    "- Threats or encouragement of self-harm\n"
+    "- Drug/weapon references used inappropriately\n\n"
+    "IMPORTANT: Words can be concatenated. Always check for embedded profanity.\n\n"
+    "MARK AS SAFE if the text is:\n"
+    "- A normal name, username, or academic description\n"
+    "OUTPUT: Reply with ONLY 'safe' or 'unsafe'. No explanation."
 )
-
-# Local blocklist for Portuguese profanity/slurs that AI models tend to miss.
-# Substrings are matched case-insensitively against the full text.
-_PT_BLOCKLIST = {
-    "pila", "pilinha", "pilas",
-    "puta", "putinha", "putas",
-    "caralho", "caralhos",
-    "foda", "foder", "fodasse", "fodido", "fodida",
-    "merda", "merdas",
-    "cona", "conas",
-    "cu", "cus",
-    "buceta",
-    "porra", "porras",
-    "viado", "viados",
-    "prenha",
-    "cuzao", "cuzão",
-    "arrombado", "arrombada",
-    "filhodaputa", "filhodeumputa",
-    "punheta", "punhetas",
-    "escroto", "escrotos",
-    "bosta", "bostas",
-    "raio", "rabos",
-    "paneleiro", "paneleiros",
-    "cagao", "cagão",
-    "joder",
-}
-
-
-def _check_local_blocklist(text: str) -> bool:
-    """Return True (safe) if no blocklisted substring is found, False otherwise."""
-    normalized = text.lower().replace(" ", "").replace("_", "").replace("-", "")
-    for term in _PT_BLOCKLIST:
-        clean_term = term.replace(" ", "")
-        if clean_term in normalized:
-            return False
-    return True
 
 
 def _rewind(uploaded_file: UploadedFile) -> None:
@@ -113,7 +90,8 @@ def _sample_to_text(sample: bytes, mime_type: str) -> Tuple[str, str]:
 
 
 def verify_file_with_groq(uploaded_file: UploadedFile) -> Tuple[bool, str]:
-    api_key = os.getenv("GROQ_API_KEY")
+    api_key = getattr(settings, 'GROQ_API_KEY',
+                      None) or os.getenv("GROQ_API_KEY")
     if not api_key:
         return False, "Chave da API do Groq não encontrada. Configure GROQ_API_KEY."
 
@@ -130,42 +108,30 @@ def verify_file_with_groq(uploaded_file: UploadedFile) -> Tuple[bool, str]:
 
     client = Groq(api_key=api_key)
     try:
-        # send prompt as system message to improve adherence
         response = client.chat.completions.create(
             model="openai/gpt-oss-safeguard-20b",
             messages=[
+                {"role": "system", "content": PROMPT},
                 {"role": "user", "content": content},
             ],
             temperature=0,
             max_tokens=128,
         )
-    except Exception as exc:  # pragma: no cover - network failure
+    except Exception as exc:
         return False, f"Failed to connect to Groq: {exc}"
 
     message = (response.choices[0].message.content or "").strip()
-    finish_reason = response.choices[0].finish_reason or ""
 
-    # Empty content or stop finish = model found nothing unsafe
     if not message:
         return True, ""
 
     normalized = message.lower()
-    # If guard says safe -> accept
     if normalized.startswith("safe"):
         return True, ""
 
     educ_keywords = (
-        "exerc",
-        "ficha",
-        "resumo",
-        "apont",
-        "correc",
-        "correção",
-        "prova",
-        "exame",
-        "tp",
-        "trabalho",
-        "correcao",
+        "exerc", "ficha", "resumo", "apont", "correc",
+        "correção", "prova", "exame", "tp", "trabalho", "correcao",
     )
     filename = getattr(uploaded_file, "name", "") or ""
     if sample_kind == "base64" and any(k in filename.lower() for k in educ_keywords):
@@ -175,37 +141,33 @@ def verify_file_with_groq(uploaded_file: UploadedFile) -> Tuple[bool, str]:
 
 
 def verify_text_with_groq(text: str, label: str = "texto") -> Tuple[bool, str]:
-    """Verify arbitrary text (username, description, etc.) with Groq."""
-    # Local blocklist runs first — catches PT profanity the AI model misses
-    if not _check_local_blocklist(text):
-        return False, "Conteúdo contém linguagem inapropriada."
-
-    api_key = os.getenv("GROQ_API_KEY")
+    """Verify arbitrary text (username, name, description) with Groq."""
+    api_key = getattr(settings, 'GROQ_API_KEY',
+                      None) or os.getenv("GROQ_API_KEY")
     if not api_key:
         return False, "Chave da API do Groq não encontrada. Configure GROQ_API_KEY."
-
-    content = f"{label}:\n{text[:4000]}"
 
     client = Groq(api_key=api_key)
     try:
         response = client.chat.completions.create(
-            model="openai/gpt-oss-safeguard-20b",
+            model="llama-3.3-70b-versatile",
             messages=[
-                {"role": "user", "content": content},
+                {"role": "system", "content": TEXT_PROMPT},
+                {"role": "user", "content": f"{label}: {text[:500]}"},
             ],
             temperature=0,
-            max_tokens=64,
+            max_tokens=10,
         )
     except Exception as exc:
-        return False, f"Failed to connect to Groq: {exc}"
+        return False, f"Falha ao contactar o Groq: {exc}"
 
-    message = (response.choices[0].message.content or "").strip()
+    message = (response.choices[0].message.content or "").strip().lower()
 
-    # Empty content = model found nothing unsafe
+    # Empty response = safe
     if not message:
         return True, ""
 
-    if message.lower().startswith("safe"):
+    if message.startswith("safe"):
         return True, ""
 
-    return False, f"Conteúdo marcado como inapropriado: {message}"
+    return False, "Conteúdo contém linguagem inapropriada."

@@ -21,6 +21,11 @@
         <h2 class="mb-0">{{ resumo.titulo }}</h2>
       </div>
       <div class="card-body">
+        {% if not resumo.is_approved and user.is_authenticated and user == resumo.autor or not resumo.is_approved and user.is_authenticated and user.is_staff %}
+        <div class="alert alert-warning">
+          Este resumo ainda está pendente de aprovação por um administrador.
+        </div>
+        {% endif %}
         <!-- Badges -->
         <div class="mb-3">
           <span class="badge bg-primary me-2">
@@ -58,11 +63,23 @@
         <!-- Ficheiro Anexo -->
         {% if resumo.ficheiro %}
         <hr />
-        <div class="mt-3">
-          <a href="{{ resumo.ficheiro.url }}" class="btn btn-success" download>
-            📥 Descarregar Resumo
-          </a>
-        </div>
+          <div class="mt-3">
+            <a href="{{ resumo.ficheiro.url }}" class="btn btn-success" target="_blank" rel="noopener">
+              📥 Abrir / Descarregar Resumo
+            </a>
+          </div>
+          <div class="mt-3">
+            <div class="ratio ratio-16x9">
+              <iframe
+                src="{{ resumo.ficheiro.url }}"
+                title="Pré-visualização do resumo"
+                style="border: 1px solid #e5e7eb; border-radius: 0.25rem;"
+              ></iframe>
+            </div>
+            <small class="text-muted d-block mt-2">
+              Se a pré-visualização não aparecer, usa o botão acima para abrir o ficheiro numa nova aba.
+            </small>
+          </div>
         {% endif %}
       </div>
 

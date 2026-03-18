@@ -3,10 +3,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth import login, authenticate
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.db.models import Q
-from .models import Resumo, Disciplina, Ano, Tag
+from django.conf import settings
+from django.core.mail import send_mail
+from django.urls import reverse
+from django.utils import timezone
+from .models import Resumo, Disciplina, Ano, Tag, EmailVerificationToken, VerificationSettings
 from .services.groq_guard import verify_file_with_groq, verify_text_with_groq
+import secrets
 
 
 def signup(request):
@@ -71,7 +76,7 @@ def signup(request):
                     request, f'Apelido não permitido: {error_message}')
                 return render(request, 'resumos/signup.html')
 
-        # Criar utilizador
+            # Criar utilizador
         try:
             user = User.objects.create_user(
                 username=username,
@@ -81,11 +86,88 @@ def signup(request):
                 last_name=last_name
             )
 
-            # Fazer login automaticamente
-            login(request, user)
-            messages.success(
-                request, f'Bem-vindo, {username}! Conta criada com sucesso.')
-            return redirect('resumos:lista')
+            # Marcar como inativo até verificar o email
+            user.is_active = False
+            user.save(update_fields=['is_active'])
+
+            # Criar token de verificação
+            token_value = secrets.token_hex(32)
+            EmailVerificationToken.objects.create(user=user, token=token_value)
+
+            # Enviar email de verificação para o utilizador
+            domain = request.get_host()
+            scheme = 'https' if request.is_secure() else 'http'
+            verification_url = f"{scheme}://{domain}{reverse('resumos:verificar_email', args=[token_value])}"
+
+            subject = 'Verificação de Email - Banco de Resumos Marista'
+            message = (
+                f"Olá {username},\n\n"
+                f"Obrigado por te registares no Banco de Resumos Marista.\n\n"
+                f"Para ativares a tua conta, clica no link seguinte:\n{verification_url}\n\n"
+                "Se não criaste esta conta, podes ignorar este email."
+            )
+
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
+            except Exception:
+                # Mesmo que o envio falhe, manter a conta criada mas inativa
+                messages.warning(
+                    request,
+                    'Conta criada, mas houve um problema a enviar o email de verificação. '
+                    'Contacta um administrador.'
+                )
+            else:
+                messages.success(
+                    request,
+                    'Conta criada com sucesso! Verifica o teu email para ativares a conta.'
+                )
+
+            # Notificar contas de administrador sobre novo utilizador para aprovação
+            try:
+                config = VerificationSettings.objects.first()
+                config_email = config.admin_email if config and config.admin_email else None
+
+                staff_emails = list(
+                    User.objects.filter(is_staff=True, email__isnull=False)
+                    .exclude(email="")
+                    .values_list('email', flat=True)
+                )
+
+                recipients = set(staff_emails)
+                if config_email:
+                    recipients.add(config_email)
+
+                if recipients:
+                    domain = request.get_host()
+                    scheme = 'https' if request.is_secure() else 'http'
+                    admin_url = f"{scheme}://{domain}{reverse('admin:auth_user_change', args=[user.id])}"
+
+                    admin_subject = 'Novo utilizador pendente de aprovação - Banco de Resumos Marista'
+                    admin_message = (
+                        f"Um novo utilizador registou-se e aguarda aprovação.\n\n"
+                        f"Utilizador: {username}\n"
+                        f"Email: {email}\n\n"
+                        f"Podes rever e ativar a conta aqui:\n{admin_url}"
+                    )
+
+                    send_mail(
+                        admin_subject,
+                        admin_message,
+                        settings.DEFAULT_FROM_EMAIL,
+                        list(recipients),
+                        fail_silently=True,
+                    )
+            except Exception:
+                # Não bloquear o fluxo em caso de erro neste email
+                pass
+
+            return redirect('login')
 
         except Exception as e:
             messages.error(request, f'Erro ao criar conta: {str(e)}')
@@ -94,8 +176,50 @@ def signup(request):
     return render(request, 'resumos/signup.html')
 
 
+def login_view(request):
+    """Login com verificação de email."""
+    if request.user.is_authenticated:
+        messages.info(request, 'Já estás autenticado.')
+        return redirect('resumos:lista')
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        next_url = request.POST.get('next') or ''
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is None:
+            messages.error(request, 'Nome de utilizador ou password incorretos.')
+        elif not user.is_active:
+            messages.warning(
+                request,
+                'A tua conta ainda não foi verificada. Verifica o teu email antes de entrar.'
+            )
+        else:
+            login(request, user)
+            messages.success(request, f'Bem-vindo de volta, {user.username}!')
+            if next_url:
+                return redirect(next_url)
+            return redirect('resumos:lista')
+
+    context = {
+        'next': request.GET.get('next', ''),
+    }
+    return render(request, 'resumos/login.html', context)
+
+
 def lista_resumos(request):
-    resumos = Resumo.objects.all()
+    # Apenas resumos aprovados são públicos; o autor e staff podem ver os seus pendentes
+    if request.user.is_authenticated:
+        if request.user.is_staff:
+            resumos = Resumo.objects.all()
+        else:
+            resumos = Resumo.objects.filter(
+                Q(is_approved=True) | Q(autor=request.user)
+            )
+    else:
+        resumos = Resumo.objects.filter(is_approved=True)
     disciplinas = Disciplina.objects.all()
     anos = Ano.objects.all()
 
@@ -132,6 +256,11 @@ def lista_resumos(request):
 
 def detalhe_resumo(request, pk):
     resumo = get_object_or_404(Resumo, pk=pk)
+
+    if not resumo.is_approved:
+        # Apenas o autor ou staff podem ver resumos pendentes
+        if not (request.user.is_authenticated and (request.user == resumo.autor or request.user.is_staff)):
+            raise Http404("Resumo não encontrado")
     return render(request, 'resumos/detalhe.html', {'resumo': resumo})
 
 
@@ -196,7 +325,47 @@ def criar_resumo(request):
         if tag_ids:
             resumo.tags.set(tag_ids)
 
-        messages.success(request, 'Resumo criado com sucesso!')
+        # Notificar contas de administrador sobre novo resumo pendente de aprovação
+        try:
+            config = VerificationSettings.objects.first()
+            config_email = config.admin_email if config and config.admin_email else None
+
+            staff_emails = list(
+                User.objects.filter(is_staff=True, email__isnull=False)
+                .exclude(email="")
+                .values_list('email', flat=True)
+            )
+
+            recipients = set(staff_emails)
+            if config_email:
+                recipients.add(config_email)
+
+            if recipients:
+                domain = request.get_host()
+                scheme = 'https' if request.is_secure() else 'http'
+                admin_url = f"{scheme}://{domain}{reverse('admin:resumos_resumo_change', args=[resumo.id])}"
+
+                subject = 'Novo resumo pendente de aprovação - Banco de Resumos Marista'
+                message = (
+                    f"Um novo resumo foi criado e aguarda aprovação.\n\n"
+                    f"Título: {titulo}\n"
+                    f"Autor: {request.user.username}\n"
+                    f"Ano: {resumo.ano.numero}º Ano\n"
+                    f"Disciplina: {resumo.disciplina.nome}\n\n"
+                    f"Podes rever e aprovar o resumo aqui:\n{admin_url}"
+                )
+
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    list(recipients),
+                    fail_silently=True,
+                )
+        except Exception:
+            pass
+
+        messages.success(request, 'Resumo criado com sucesso! Aguarda aprovação do administrador.')
         return redirect('resumos:detalhe', pk=resumo.pk)
 
     return render(request, 'resumos/form.html', {
@@ -319,3 +488,27 @@ def get_disciplinas_por_ano(request):
 
     data = [{'id': d.id, 'nome': d.nome} for d in disciplinas]
     return JsonResponse({'disciplinas': data})
+
+
+def verificar_email(request, token):
+    try:
+        token_obj = EmailVerificationToken.objects.select_related('user').get(token=token)
+    except EmailVerificationToken.DoesNotExist:
+        messages.error(request, 'Link de verificação inválido ou expirado.')
+        return redirect('login')
+
+    if not token_obj.is_valid():
+        messages.error(request, 'Este link de verificação já não é válido.')
+        return redirect('login')
+
+    user = token_obj.user
+    if not user.is_active:
+        user.is_active = True
+        user.save(update_fields=['is_active'])
+
+    if token_obj.used_at is None:
+        token_obj.used_at = timezone.now()
+        token_obj.save(update_fields=['used_at'])
+
+    messages.success(request, 'Email verificado com sucesso! Já podes entrar na tua conta.')
+    return redirect('login')
