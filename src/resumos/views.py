@@ -125,7 +125,7 @@ def signup(request):
             else:
                 messages.success(
                     request,
-                    'Conta criada com sucesso! Verifica o teu email para ativares a conta.'
+                    'Conta criada com sucesso! Verifica o teu email para ativares a conta. Se não receberes o email, verifica a pasta de spam ou contacta um administrador.'
                 )
 
             # Notificar contas de administrador sobre novo utilizador para aprovação
@@ -190,7 +190,8 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
 
         if user is None:
-            messages.error(request, 'Nome de utilizador ou password incorretos.')
+            messages.error(
+                request, 'Nome de utilizador ou password incorretos.')
         elif not user.is_active:
             messages.warning(
                 request,
@@ -365,7 +366,8 @@ def criar_resumo(request):
         except Exception:
             pass
 
-        messages.success(request, 'Resumo criado com sucesso! Aguarda aprovação do administrador.')
+        messages.success(
+            request, 'Resumo criado com sucesso! Aguarda aprovação do administrador.')
         return redirect('resumos:detalhe', pk=resumo.pk)
 
     return render(request, 'resumos/form.html', {
@@ -492,7 +494,8 @@ def get_disciplinas_por_ano(request):
 
 def verificar_email(request, token):
     try:
-        token_obj = EmailVerificationToken.objects.select_related('user').get(token=token)
+        token_obj = EmailVerificationToken.objects.select_related(
+            'user').get(token=token)
     except EmailVerificationToken.DoesNotExist:
         messages.error(request, 'Link de verificação inválido ou expirado.')
         return redirect('login')
@@ -510,5 +513,6 @@ def verificar_email(request, token):
         token_obj.used_at = timezone.now()
         token_obj.save(update_fields=['used_at'])
 
-    messages.success(request, 'Email verificado com sucesso! Já podes entrar na tua conta.')
+    messages.success(
+        request, 'Email verificado com sucesso! Já podes entrar na tua conta.')
     return redirect('login')
