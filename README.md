@@ -48,57 +48,6 @@ python manage.py runserver
 
 ---
 
-## 🗄️ Configurar a BD num novo ambiente
-
-Quando clonares o projeto numa máquina/servidor novo, segue estes passos:
-
-1. **Instalar dependências**
-
-	```bash
-	pip install -r requirements.txt
-	```
-
-2. **Criar e configurar o ficheiro `.env` (na raiz do repo)**
-
-	```bash
-	cp .env.example .env
-	```
-
-	Depois edita `.env` e preenche, pelo menos:
-
-	- `SECRET_KEY` (podes gerar um novo para produção)
-	- `GROQ_API_KEY` (opcional, mas necessário para verificação por AI)
-	- `EMAIL_BACKEND`, `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL` (para envio de emails de verificação/notificação)
-
-3. **Aplicar migrações** (cria todas as tabelas, incluindo aprovação de resumos e tokens de email)
-
-	```bash
-	cd src
-	python manage.py migrate
-	```
-
-4. **Criar dados iniciais (apenas primeira vez nesse ambiente)**
-
-	```bash
-	python manage.py setup_initial_data
-	python manage.py setup_disciplinas_anos
-	python.manage.py setup_tags
-	```
-
-5. **Criar utilizador admin** (se ainda não existir)
-
-	```bash
-	python manage.py createsuperuser
-	```
-
-6. **(Opcional) Configurar email de notificação de aprovação**
-
-	- Acede a `/admin/`, entra com o superuser.
-	- Em “Configurações de Verificação”, define o email global que recebe notificações.
-	- Em “Users”, certifica-te de que as contas `is_staff` têm o campo **Email** preenchido (recebem notificações pessoais).
-
----
-
 ## 🤖 Verificação por AI
 
 Esta aplicação usa a API do Groq para verificar automaticamente ficheiros carregados (PDFs, textos, etc.) antes de os tornar públicos. A verificação é executada em `src/resumos/services/groq_guard.py` e espera a variável de ambiente `GROQ_API_KEY` configurada.
